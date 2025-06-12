@@ -32,6 +32,7 @@ S3 = {}
 MINIO = {}
 OSS = {}
 OS = {}
+MILVUS = {}
 
 # Initialize the selected configuration data based on environment variables to solve the problem of initialization errors due to lack of configuration
 if DOC_ENGINE == 'elasticsearch':
@@ -40,6 +41,9 @@ elif DOC_ENGINE == 'opensearch':
     OS = get_base_config("os", {})
 elif DOC_ENGINE == 'infinity':
     INFINITY = get_base_config("infinity", {"uri": "infinity:23817"})
+elif DOC_ENGINE == 'milvus':
+    # MilvusConnection expects 'host' and 'port' separately.
+    MILVUS = get_base_config("milvus", {"host": "localhost", "port": "19530", "db_name": "ragflow", "user": "", "password": ""})
 
 if STORAGE_IMPL_TYPE in ['AZURE_SPN', 'AZURE_SAS']:
     AZURE = get_base_config("azure", {})

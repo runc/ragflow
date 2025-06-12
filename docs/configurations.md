@@ -162,6 +162,26 @@ If you cannot download the RAGFlow Docker image, try the following mirrors.
 - `password`: The password for MinIO.
 - `host`: The MinIO serving IP *and* port inside the Docker container. Defaults to `minio:9000`.
 
+### `milvus`
+
+Configuration for connecting to your Milvus instance when `DOC_ENGINE` is set to `milvus`.
+
+- `host`: The hostname or IP address of the Milvus server.
+  - Default: `localhost`
+  - Environment Variable: `MILVUS_HOST`
+- `port`: The port number on which the Milvus server is listening.
+  - Default: `19530`
+  - Environment Variable: `MILVUS_PORT`
+- `db_name`: The specific database name within Milvus to connect to. While RAGFlow creates and manages tenant-specific databases (e.g., `rag_yourtenantid`), this can be a default database for initial connection or system-level operations if any.
+  - Default: `ragflow`
+  - Environment Variable: `MILVUS_DB_NAME`
+- `user`: The username for authenticating with the Milvus server (if authentication is enabled).
+  - Default: `""` (empty string, for no authentication)
+  - Environment Variable: `MILVUS_USER`
+- `password`: The password for the specified user (if authentication is enabled).
+  - Default: `""` (empty string, for no authentication)
+  - Environment Variable: `MILVUS_PASSWORD`
+
 ### `oauth`  
 
 The OAuth configuration for signing up or signing in to RAGFlow using a third-party account.
