@@ -10,10 +10,10 @@ ragflow:
 #   max_connections: 900
 #   stale_timeout: 300
 #   max_allowed_packet: 1073741824
-postgres:
+database:
   name: 'rag_flow'
   user: 'root'
-  passwd_key: 'Password123@postgres'
+  password: 'Password123@postgres'
   host: '172.16.124.102'
   port: 5432
   max_connections: 100
