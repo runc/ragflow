@@ -118,7 +118,6 @@ dependencies = [
     "pypdf2>=3.0.1,<4.0.0",
     "graspologic>=3.4.1,<4.0.0",
     "pymysql>=1.1.1,<2.0.0",
-    "mini-racer>=0.12.4,<0.13.0",
     "pyodbc>=5.2.0,<6.0.0",
     "flasgger>=0.9.7.1,<0.10.0",
     "xxhash>=3.5.0,<4.0.0",
