@@ -305,7 +305,9 @@ def decrypt_database_config(
         database=None, passwd_key="password", name="database"):
     if not database:
         database = get_base_config(name, {})
-
+    
+    import json
+    print("=======database===", json.dumps(database))
     database[passwd_key] = decrypt_database_password(database[passwd_key])
     return database
 
