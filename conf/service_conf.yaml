@@ -13,7 +13,7 @@ ragflow:
 postgres:
   name: 'rag_flow'
   user: 'root'
-  password: 'Password123@postgres'
+  passwd_key: 'Password123@postgres'
   host: '172.16.124.102'
   port: 5432
   max_connections: 100
