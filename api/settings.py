@@ -46,7 +46,7 @@ HOST_PORT = None
 SECRET_KEY = None
 FACTORY_LLM_INFOS = None
 
-DATABASE_TYPE = os.getenv("DB_TYPE", "mysql")
+DATABASE_TYPE = os.getenv("DB_TYPE", "postgres")
 DATABASE = decrypt_database_config(name=DATABASE_TYPE)
 
 # authentication
