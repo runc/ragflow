@@ -97,7 +97,7 @@ def get_or_create_secret_key():
 def init_settings():
     global LLM, LLM_FACTORY, LLM_BASE_URL, LIGHTEN, DATABASE_TYPE, DATABASE, FACTORY_LLM_INFOS, REGISTER_ENABLED
     LIGHTEN = int(os.environ.get("LIGHTEN", "0"))
-    DATABASE_TYPE = os.getenv("DB_TYPE", "mysql")
+    DATABASE_TYPE = os.getenv("DB_TYPE", "postgres")
     DATABASE = decrypt_database_config(name=DATABASE_TYPE)
     LLM = get_base_config("user_default_llm", {})
     LLM_DEFAULT_MODELS = LLM.get("default_models", {})
