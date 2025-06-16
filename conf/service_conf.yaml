@@ -11,13 +11,13 @@ ragflow:
 #   stale_timeout: 300
 #   max_allowed_packet: 1073741824
 postgres:
- name: 'rag_flow'
- user: 'root'
- password: 'Password123@postgres'
- host: '172.16.124.102'
- port: 5432
- max_connections: 100
- stale_timeout: 30  
+  name: 'rag_flow'
+  user: 'root'
+  password: 'Password123@postgres'
+  host: '172.16.124.102'
+  port: 5432
+  max_connections: 100
+  stale_timeout: 30  
 minio:
   user: 'rag_flow'
   password: 'infini_rag_flow'
