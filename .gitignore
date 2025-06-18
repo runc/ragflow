@@ -19,6 +19,8 @@ Cargo.lock
 *.pdb
 *.trie
 
+volumes/
+
 .idea/
 .vscode/
 

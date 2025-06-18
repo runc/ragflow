@@ -62,7 +62,7 @@ from rag.utils.infinity_conn import InfinityConnection
 # Assuming opensearch_conn.py contains OpenSearchConnection similar to es_conn
 # from rag.utils.opensearch_conn import OpenSearchConnection # Corrected import name if it exists
 # For now, let's use the actual opensearch_coon.py (typo in filename in repo)
-from rag.utils.opensearch_coon import OpenSearchConnection # Actual filename in repo
+from rag.utils.opensearch_coon import OSConnection # Actual filename in repo
 from rag.utils.milvus_conn import MilvusConnection
 
 
@@ -83,7 +83,7 @@ def get_doc_store() -> DocStoreConnection:
     if doc_engine_lower == "elasticsearch":
         _doc_store_instance = ESConnection()
     elif doc_engine_lower == "opensearch":
-        _doc_store_instance = OpenSearchConnection()
+        _doc_store_instance = OSConnection()
     elif doc_engine_lower == "infinity":
         _doc_store_instance = InfinityConnection()
     elif doc_engine_lower == "milvus":

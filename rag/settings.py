@@ -86,3 +86,6 @@ def get_svr_queue_name(priority: int) -> str:
 
 def get_svr_queue_names():
     return [get_svr_queue_name(priority) for priority in [1, 0]]
+
+# 末尾添加，使其可被 as settings 导入
+settings = __import__(__name__)
