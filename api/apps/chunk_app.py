@@ -15,6 +15,7 @@
 #
 import datetime
 import json
+import sys
 
 from flask import request
 from flask_login import login_required, current_user
@@ -48,19 +49,46 @@ def list_chunk():
     size = int(req.get("size", 30))
     question = req.get("keywords", "")
     try:
+        print(f"list_chunk called with doc_id: {doc_id}, page: {page}, size: {size}, keywords: '{question}'", file=sys.stderr)
         tenant_id = DocumentService.get_tenant_id(req["doc_id"])
+        print(f"tenant_id: {tenant_id}", file=sys.stderr)
         if not tenant_id:
             return get_data_error_result(message="Tenant not found!")
         e, doc = DocumentService.get_by_id(doc_id)
+        print(f"DocumentService.get_by_id result: e={e}, doc={doc}", file=sys.stderr)
         if not e:
             return get_data_error_result(message="Document not found!")
         kb_ids = KnowledgebaseService.get_kb_ids(tenant_id)
+        print(f"kb_ids: {kb_ids}", file=sys.stderr)
+        
+        # 检查文档实际属于哪个知识库
+        print(f"Document kb_id: {doc.kb_id}", file=sys.stderr)
+        
+        # 先尝试不使用doc_id过滤的查询，看看集合中有什么数据
+        query_no_filter = {
+            "page": 1, "size": 5, "question": "", "sort": True
+        }
+        print(f"Testing query without doc_id filter: {query_no_filter}", file=sys.stderr)
+        sres_test = settings.retrievaler.search(query_no_filter, search.index_name(tenant_id), kb_ids, highlight=True)
+        print(f"Query without filter result: total={sres_test.total}, sample_ids={sres_test.ids[:3] if sres_test.ids else 'None'}", file=sys.stderr)
+        
+        # 检查集合中是否有任何属于该文档的数据
+        if sres_test.total > 0:
+            sample_doc_ids = []
+            for id in sres_test.ids[:5]:
+                if id in sres_test.field:
+                    sample_doc_ids.append(sres_test.field[id].get('doc_id', 'unknown'))
+            print(f"Sample doc_ids in collection: {sample_doc_ids}", file=sys.stderr)
+            print(f"Looking for doc_id: {doc_id}", file=sys.stderr)
+        
         query = {
             "doc_ids": [doc_id], "page": page, "size": size, "question": question, "sort": True
         }
         if "available_int" in req:
             query["available_int"] = int(req["available_int"])
+        print(f"Search query: {query}", file=sys.stderr)
         sres = settings.retrievaler.search(query, search.index_name(tenant_id), kb_ids, highlight=True)
+        print(f"Search result: total={sres.total}, ids={sres.ids}", file=sys.stderr)
         res = {"total": sres.total, "chunks": [], "doc": doc.to_dict()}
         for id in sres.ids:
             d = {

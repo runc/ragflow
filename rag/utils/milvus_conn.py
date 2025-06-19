@@ -345,7 +345,9 @@ class MilvusConnection(DocStoreConnection):
                     logger.debug(f"Milvus search filter expression for {collection_name}: '{final_filter_expr}'")
 
                     # Process match expressions
+                    has_match_expr = False
                     for expr in matchExprs:
+                        has_match_expr = True
                         if isinstance(expr, MatchDenseExpr):
                             # Vector search
                             vector_field_name = expr.vector_column_name
@@ -428,6 +430,40 @@ class MilvusConnection(DocStoreConnection):
                             logger.debug(f"FusionExpr detected: method={expr.method}, params={expr.fusion_params}")
                             # For now, we just log it - the actual fusion logic is handled at a higher level
                             pass
+                    
+                    # Handle case when no match expressions are provided (e.g., empty question with filters)
+                    if not has_match_expr and final_filter_expr:
+                        logger.info(f"No match expressions provided, performing filter-only query on {collection_name}")
+                        
+                        # Determine output fields
+                        output_fields = []
+                        if not selectFields or "*" in selectFields:
+                            output_fields = [f.name for f in collection.schema.fields if f.dtype != DataType.FLOAT_VECTOR]
+                        else:
+                            output_fields = list(set(selectFields + ["id"]))
+                        
+                        # Calculate query limit
+                        query_limit = limit + offset
+                        
+                        # Perform filter-only query
+                        query_results = collection.query(
+                            expr=final_filter_expr,
+                            output_fields=output_fields,
+                            limit=query_limit
+                        )
+                        
+                        logger.info(f"Filter-only query results for {collection_name}: {len(query_results) if query_results else 0} documents")
+                        
+                        # Process results
+                        if query_results:
+                            for doc in query_results:
+                                doc['_score'] = 1.0  # Default score for filter-only queries
+                                logger.debug(f"  - Doc: id={doc.get('id', 'N/A')}, doc_id={doc.get('doc_id', 'N/A')}")
+                                results_list.append(doc)
+                            
+                            total_hits += len(query_results)
+                        else:
+                            logger.warning(f"No filter-only results returned for collection {collection_name}")
 
                 except Exception as e:
                     logger.error(f"Failed to search collection {collection_name}: {e}")

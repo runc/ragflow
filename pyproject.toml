@@ -128,6 +128,7 @@ dependencies = [
     "mcp>=1.6.0",
     "opensearch-py==2.7.1",
     "pluginlib==0.9.4",
+    "exceptiongroup>=1.2.2",
 ]
 
 [project.optional-dependencies]

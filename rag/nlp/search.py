@@ -97,6 +97,12 @@ class Dealer:
             res = self.dataStore.search(src, [], filters, [], orderBy, offset, limit, idx_names, kb_ids)
             total = self.dataStore.getTotal(res)
             logging.debug("Dealer.search TOTAL: {}".format(total))
+            if total == 0 and "doc_id" in filters:
+                logging.warning(f"Empty question search with doc_id filter returned no results. Trying fallback with match query.")
+                match_text, _ = self.qryr.question("*", min_match=0.0)
+                res = self.dataStore.search(src, [], filters, [match_text], orderBy, offset, limit, idx_names, kb_ids)
+                total = self.dataStore.getTotal(res)
+                logging.debug("Dealer.search FALLBACK TOTAL: {}".format(total))
         else:
             highlightFields = ["content_ltks", "title_tks"] if highlight else []
             matchText, keywords = self.qryr.question(qst, min_match=0.3)
