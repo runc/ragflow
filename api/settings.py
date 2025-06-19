@@ -156,13 +156,22 @@ def init_settings():
     OAUTH_CONFIG = get_base_config("oauth", {})
 
     global DOC_ENGINE, docStoreConn, retrievaler, kg_retrievaler
-    DOC_ENGINE = os.environ.get("DOC_ENGINE", "elasticsearch")
+    DOC_ENGINE = os.environ.get("DOC_ENGINE", "milvus")
     # DOC_ENGINE = os.environ.get('DOC_ENGINE', "opensearch")
     lower_case_doc_engine = DOC_ENGINE.lower()
     if lower_case_doc_engine == "elasticsearch":
         docStoreConn = rag.utils.es_conn.ESConnection()
     elif lower_case_doc_engine == "infinity":
         docStoreConn = rag.utils.infinity_conn.InfinityConnection()
+    elif lower_case_doc_engine == "milvus":
+        milvus_config = get_base_config("milvus", {"host": "localhost", "port": "19530", "db_name": "ragflow", "user": "", "password": ""})
+        docStoreConn = rag.utils.milvus_conn.MilvusConnection(
+            host=milvus_config["host"],
+            port=milvus_config["port"],
+            db_name=milvus_config["db_name"],
+            user=milvus_config.get("user", ""),
+            password=milvus_config.get("password", "")
+        )    
     elif lower_case_doc_engine == "opensearch":
         docStoreConn = rag.utils.opensearch_coon.OSConnection()
     else:

@@ -22,10 +22,54 @@ minio:
   user: 'rag_flow'
   password: 'infini_rag_flow'
   host: 'localhost:9000'
-es:
-  hosts: 'http://localhost:9200'
-  username: 'elastic'
-  password: 'f0WHp0nr'
+# es:
+#   hosts: 'http://localhost:9200'
+#   username: 'elastic'
+#   password: 'f0WHp0nr'
+milvus:
+  host: 'localhost'
+  port: 19530
+  # Optional authentication parameters (uncomment if Milvus is secured)
+  # user: ''
+  # password: ''
+  # Database name prefix for tenant-specific databases
+  # Final DB name will be: rag_{tenant_id_with_underscores}
+  db_name_prefix: 'rag'
+  # Connection settings
+  connection_timeout: 30
+  # Index creation settings
+  index:
+    # Index type for vector fields: IVF_FLAT, HNSW, etc.
+    type: 'IVF_FLAT'
+    # Metric type: L2, IP (inner product for cosine similarity)
+    metric_type: 'L2'
+    # Index parameters (varies by index type)
+    params:
+      # For IVF_FLAT
+      nlist: 128
+      # For HNSW (if using HNSW index type)
+      # M: 16
+      # efConstruction: 256
+  # Search parameters
+  search:
+    # Search parameters (varies by index type)
+    params:
+      # For IVF_FLAT
+      nprobe: 10
+      # For HNSW (if using HNSW index type)
+      # ef: 64
+    # Consistency level: Strong, Bounded, Session, Eventually
+    consistency_level: 'Strong'
+  # Schema settings
+  schema:
+    # Maximum length for VARCHAR fields
+    max_varchar_length: 1024
+    # Maximum length for ID fields
+    id_varchar_length: 255
+    # Maximum length for content fields
+    content_max_length: 65535
+    # Enable dynamic fields for flexibility
+    enable_dynamic_field: true
 os:
   hosts: 'http://localhost:1201'
   username: 'admin'
