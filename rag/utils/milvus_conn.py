@@ -14,6 +14,7 @@ from rag.utils.doc_store_conn import (
     MatchExpr,
     MatchTextExpr,
     MatchDenseExpr,
+    FusionExpr,
     OrderByExpr,
 )
 
@@ -316,6 +317,16 @@ class MilvusConnection(DocStoreConnection):
                     collection = Collection(name=collection_name, using=self.alias)
                     collection.load()
 
+                    # Log collection info for debugging
+                    logger.info(f"Searching collection {collection_name}:")
+                    logger.info(f"  - Collection entities count: {collection.num_entities}")
+                    logger.info(f"  - Collection schema fields: {[f.name for f in collection.schema.fields]}")
+
+                    # Check if collection has data
+                    if collection.num_entities == 0:
+                        logger.warning(f"Collection {collection_name} is empty (0 entities)")
+                        continue
+
                     # Build filter expression from condition
                     filter_expr_parts = []
                     if condition:
@@ -364,28 +375,46 @@ class MilvusConnection(DocStoreConnection):
                             else:
                                 output_fields = list(set(selectFields + ["id"]))
 
+                            # Log search parameters for debugging
+                            logger.info(f"Milvus search for collection {collection_name}:")
+                            logger.info(f"  - Vector field: {vector_field_name}")
+                            logger.info(f"  - Vector dimension: {len(expr.embedding_data)}")
+                            logger.info(f"  - Search params: {search_params}")
+                            logger.info(f"  - Filter expression: '{final_filter_expr}'")
+                            logger.info(f"  - Output fields: {output_fields}")
+                            logger.info(f"  - Limit: {limit + offset}")
+
+                            # Calculate search limit - we need more results to support pagination across multiple collections
+                            search_limit = max(limit + offset, 100)  # Ensure we get enough results
+
                             # Perform vector search
                             search_results = collection.search(
                                 data=[expr.embedding_data],
                                 anns_field=vector_field_name,
                                 param=search_params,
-                                limit=limit + offset,
+                                limit=search_limit,
                                 expr=final_filter_expr if final_filter_expr else None,
                                 output_fields=output_fields,
                                 consistency_level=search_config.get("consistency_level", "Strong")
                             )
 
+                            logger.info(f"Milvus search results for {collection_name}: {len(search_results) if search_results else 0} result sets")
+
                             # Process results
                             if search_results and len(search_results) > 0:
                                 hits = search_results[0]
-                                paginated_hits = hits[offset:offset + limit]
+                                logger.info(f"  - Total hits in first result set: {len(hits)}")
 
-                                for hit in paginated_hits:
+                                # Apply pagination at the search level, not after
+                                for hit in hits:
                                     result_doc = hit.entity.to_dict()
                                     result_doc['_score'] = hit.distance
+                                    logger.debug(f"  - Hit: id={result_doc.get('id', 'N/A')}, score={hit.distance}")
                                     results_list.append(result_doc)
 
                                 total_hits += len(hits)
+                            else:
+                                logger.warning(f"No search results returned for collection {collection_name}")
 
                         elif isinstance(expr, MatchTextExpr):
                             # Text search not directly supported in Milvus
@@ -393,15 +422,34 @@ class MilvusConnection(DocStoreConnection):
                             logger.warning("Text search not implemented for Milvus")
                             pass
 
+                        elif isinstance(expr, FusionExpr):
+                            # Fusion expressions are used for combining results from multiple search types
+                            # In Milvus, we handle this by adjusting the search strategy
+                            logger.debug(f"FusionExpr detected: method={expr.method}, params={expr.fusion_params}")
+                            # For now, we just log it - the actual fusion logic is handled at a higher level
+                            pass
+
                 except Exception as e:
                     logger.error(f"Failed to search collection {collection_name}: {e}")
                     continue
 
+        # Apply offset and limit to the combined results
+        if results_list:
+            # Sort by score (distance) - lower distance means higher similarity
+            results_list.sort(key=lambda x: x.get('_score', float('inf')))
+
+            # Apply pagination
+            paginated_results = results_list[offset:offset + limit]
+
+            logger.info(f"Final results: total={len(results_list)}, after pagination={len(paginated_results)}")
+        else:
+            paginated_results = []
+
         # Format results to match expected format
         return {
             "hits": {
-                "hits": [{"_source": doc, "_id": doc.get("id"), "_score": doc.get("_score", 0)} for doc in results_list],
-                "total": {"value": total_hits}
+                "hits": [{"_source": doc, "_id": doc.get("id"), "_score": doc.get("_score", 0)} for doc in paginated_results],
+                "total": {"value": len(results_list)}  # Total before pagination
             }
         }
 
