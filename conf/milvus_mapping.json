@@ -1,0 +1,319 @@
+{
+  "settings": {
+    "index": {
+      "metric_type": "L2",
+      "index_type": "IVF_FLAT",
+      "params": {
+        "nlist": 128
+      }
+    },
+    "search": {
+      "metric_type": "L2",
+      "params": {
+        "nprobe": 10
+      },
+      "consistency_level": "Strong"
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "varchar",
+        "max_length": 255,
+        "is_primary": true,
+        "auto_id": false,
+        "nullable": false,
+        "default": "",
+        "description": "Primary key chunk ID"
+      },
+      "doc_id": {
+        "type": "varchar",
+        "max_length": 255,
+        "nullable": false,
+        "default": "",
+        "description": "Document ID"
+      },
+      "kb_id": {
+        "type": "varchar",
+        "max_length": 255,
+        "nullable": false,
+        "default": "",
+        "description": "Knowledge base ID"
+      },
+      "create_time": {
+        "type": "varchar",
+        "max_length": 50,
+        "nullable": false,
+        "default": "",
+        "description": "Creation time"
+      },
+      "create_timestamp_flt": {
+        "type": "float",
+        "nullable": false,
+        "default": 0.0,
+        "description": "Creation timestamp"
+      },
+      "img_id": {
+        "type": "varchar",
+        "max_length": 255,
+        "nullable": false,
+        "default": "",
+        "description": "Image ID"
+      },
+      "docnm_kwd": {
+        "type": "varchar",
+        "max_length": 500,
+        "nullable": false,
+        "default": "",
+        "description": "Document name keyword"
+      },
+      "title_tks": {
+        "type": "varchar",
+        "max_length": 2000,
+        "nullable": false,
+        "default": "",
+        "description": "Title tokens"
+      },
+      "title_sm_tks": {
+        "type": "varchar",
+        "max_length": 2000,
+        "nullable": false,
+        "default": "",
+        "description": "Title small tokens"
+      },
+      "name_kwd": {
+        "type": "varchar",
+        "max_length": 500,
+        "nullable": false,
+        "default": "",
+        "description": "Name keyword"
+      },
+      "important_kwd": {
+        "type": "varchar",
+        "max_length": 2000,
+        "nullable": false,
+        "default": "",
+        "description": "Important keywords"
+      },
+      "tag_kwd": {
+        "type": "varchar",
+        "max_length": 2000,
+        "nullable": false,
+        "default": "",
+        "description": "Tag keywords"
+      },
+      "important_tks": {
+        "type": "varchar",
+        "max_length": 2000,
+        "nullable": false,
+        "default": "",
+        "description": "Important tokens"
+      },
+      "question_kwd": {
+        "type": "varchar",
+        "max_length": 2000,
+        "nullable": false,
+        "default": "",
+        "description": "Question keywords"
+      },
+      "question_tks": {
+        "type": "varchar",
+        "max_length": 2000,
+        "nullable": false,
+        "default": "",
+        "description": "Question tokens"
+      },
+      "content_with_weight": {
+        "type": "varchar",
+        "max_length": 65535,
+        "nullable": false,
+        "default": "",
+        "description": "Content with weight"
+      },
+      "content_ltks": {
+        "type": "varchar",
+        "max_length": 65535,
+        "nullable": false,
+        "default": "",
+        "description": "Content long tokens"
+      },
+      "content_sm_ltks": {
+        "type": "varchar",
+        "max_length": 65535,
+        "nullable": false,
+        "default": "",
+        "description": "Content small long tokens"
+      },
+      "authors_tks": {
+        "type": "varchar",
+        "max_length": 2000,
+        "nullable": false,
+        "default": "",
+        "description": "Authors tokens"
+      },
+      "authors_sm_tks": {
+        "type": "varchar",
+        "max_length": 2000,
+        "nullable": false,
+        "default": "",
+        "description": "Authors small tokens"
+      },
+      "page_num_int": {
+        "type": "varchar",
+        "max_length": 1000,
+        "nullable": false,
+        "default": "",
+        "description": "Page numbers"
+      },
+      "top_int": {
+        "type": "varchar",
+        "max_length": 1000,
+        "nullable": false,
+        "default": "",
+        "description": "Top positions"
+      },
+      "position_int": {
+        "type": "varchar",
+        "max_length": 2000,
+        "nullable": false,
+        "default": "",
+        "description": "Position coordinates"
+      },
+      "weight_int": {
+        "type": "int64",
+        "nullable": false,
+        "default": 0,
+        "description": "Weight integer"
+      },
+      "weight_flt": {
+        "type": "float",
+        "nullable": false,
+        "default": 0.0,
+        "description": "Weight float"
+      },
+      "rank_int": {
+        "type": "int64",
+        "nullable": false,
+        "default": 0,
+        "description": "Rank integer"
+      },
+      "rank_flt": {
+        "type": "float",
+        "nullable": false,
+        "default": 0.0,
+        "description": "Rank float"
+      },
+      "available_int": {
+        "type": "int64",
+        "nullable": false,
+        "default": 1,
+        "description": "Available flag"
+      },
+      "knowledge_graph_kwd": {
+        "type": "varchar",
+        "max_length": 2000,
+        "nullable": false,
+        "default": "",
+        "description": "Knowledge graph keywords"
+      },
+      "entities_kwd": {
+        "type": "varchar",
+        "max_length": 2000,
+        "nullable": false,
+        "default": "",
+        "description": "Entities keywords"
+      },
+      "pagerank_fea": {
+        "type": "int64",
+        "nullable": false,
+        "default": 0,
+        "description": "PageRank feature"
+      },
+      "tag_feas": {
+        "type": "varchar",
+        "max_length": 2000,
+        "nullable": false,
+        "default": "",
+        "description": "Tag features"
+      },
+      "from_entity_kwd": {
+        "type": "varchar",
+        "max_length": 2000,
+        "nullable": false,
+        "default": "",
+        "description": "From entity keywords"
+      },
+      "to_entity_kwd": {
+        "type": "varchar",
+        "max_length": 2000,
+        "nullable": false,
+        "default": "",
+        "description": "To entity keywords"
+      },
+      "entity_kwd": {
+        "type": "varchar",
+        "max_length": 2000,
+        "nullable": false,
+        "default": "",
+        "description": "Entity keywords"
+      },
+      "entity_type_kwd": {
+        "type": "varchar",
+        "max_length": 500,
+        "nullable": false,
+        "default": "",
+        "description": "Entity type keywords"
+      },
+      "source_id": {
+        "type": "varchar",
+        "max_length": 2000,
+        "nullable": false,
+        "default": "",
+        "description": "Source ID"
+      },
+      "n_hop_with_weight": {
+        "type": "varchar",
+        "max_length": 65535,
+        "nullable": false,
+        "default": "",
+        "description": "N-hop with weight"
+      },
+      "removed_kwd": {
+        "type": "varchar",
+        "max_length": 2000,
+        "nullable": false,
+        "default": "",
+        "description": "Removed keywords"
+      },
+      "doc_type_kwd": {
+        "type": "varchar",
+        "max_length": 500,
+        "nullable": false,
+        "default": "",
+        "description": "Document type keywords"
+      }
+    },
+    "vector_fields": {
+      "q_512_vec": {
+        "type": "float_vector",
+        "dim": 512,
+        "description": "512-dimensional query vector"
+      },
+      "q_768_vec": {
+        "type": "float_vector",
+        "dim": 768,
+        "description": "768-dimensional query vector"
+      },
+      "q_1024_vec": {
+        "type": "float_vector",
+        "dim": 1024,
+        "description": "1024-dimensional query vector"
+      },
+      "q_1536_vec": {
+        "type": "float_vector",
+        "dim": 1536,
+        "description": "1536-dimensional query vector"
+      }
+    }
+  }
+}

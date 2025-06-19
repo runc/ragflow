@@ -61,6 +61,31 @@ def get_milvus_field_type(field_name: str, field_info: dict) -> tuple[DataType, 
         return DataType.VARCHAR, {"max_length": 1024}
 
 
+def get_milvus_field_type_from_config(field_name: str, field_info: dict) -> tuple[DataType, dict]:
+    """Convert milvus mapping config field type to Milvus field type"""
+    field_type = field_info.get("type", "varchar")
+    params = {}
+
+    # Handle different field types
+    if field_type == "varchar":
+        params["max_length"] = field_info.get("max_length", 65535)
+        if field_info.get("is_primary", False):
+            params["is_primary"] = True
+            params["auto_id"] = field_info.get("auto_id", False)
+        return DataType.VARCHAR, params
+    elif field_type == "int64":
+        return DataType.INT64, params
+    elif field_type == "float":
+        return DataType.FLOAT, params
+    elif field_type == "float_vector":
+        params["dim"] = field_info.get("dim", 1024)
+        return DataType.FLOAT_VECTOR, params
+    else:
+        # Default to varchar for unknown types
+        params["max_length"] = field_info.get("max_length", 65535)
+        return DataType.VARCHAR, params
+
+
 @singleton
 class MilvusConnection(DocStoreConnection):
     def __init__(self):
@@ -84,12 +109,13 @@ class MilvusConnection(DocStoreConnection):
             raise Exception(msg)
 
         # Load field mapping
-        fp_mapping = os.path.join(get_project_base_directory(), "conf", "infinity_mapping.json")
+        fp_mapping = os.path.join(get_project_base_directory(), "conf", "milvus_mapping.json")
         if not os.path.exists(fp_mapping):
             msg = f"Milvus mapping file not found at {fp_mapping}"
             logger.error(msg)
             raise Exception(msg)
-        self.mapping = json.load(open(fp_mapping, "r"))
+        self.mapping_config = json.load(open(fp_mapping, "r"))
+        self.mapping = self.mapping_config["mappings"]["properties"]
         logger.info(f"Milvus connection established successfully.")
 
     def _create_connection(self):
@@ -161,40 +187,38 @@ class MilvusConnection(DocStoreConnection):
             fields = []
             vector_field_name = f"q_{vectorSize}_vec"
 
-            # Add primary key field
-            fields.append(FieldSchema(
-                name="id",
-                dtype=DataType.VARCHAR,
-                is_primary=True,
-                auto_id=False,
-                max_length=255,
-                description="Primary key chunk ID"
-            ))
-
-            # Add other fields from mapping
+            # Add fields from mapping properties
             for field_name, field_info in self.mapping.items():
-                if field_name == "id":
-                    continue  # Already added as primary key
-
                 if field_name == vector_field_name or "_vec" in field_name:
                     continue  # Will add vector field separately
 
-                dtype, params = get_milvus_field_type(field_name, field_info)
+                dtype, params = get_milvus_field_type_from_config(field_name, field_info)
                 field_schema = FieldSchema(
                     name=field_name,
                     dtype=dtype,
-                    description=f"Field {field_name}",
+                    description=field_info.get("description", f"Field {field_name}"),
                     **params
                 )
                 fields.append(field_schema)
 
             # Add vector field
-            fields.append(FieldSchema(
-                name=vector_field_name,
-                dtype=DataType.FLOAT_VECTOR,
-                dim=vectorSize,
-                description="Query vector embedding"
-            ))
+            vector_fields = self.mapping_config["mappings"].get("vector_fields", {})
+            if vector_field_name in vector_fields:
+                vector_info = vector_fields[vector_field_name]
+                fields.append(FieldSchema(
+                    name=vector_field_name,
+                    dtype=DataType.FLOAT_VECTOR,
+                    dim=vector_info["dim"],
+                    description=vector_info.get("description", "Query vector embedding")
+                ))
+            else:
+                # Fallback to dynamic vector field creation
+                fields.append(FieldSchema(
+                    name=vector_field_name,
+                    dtype=DataType.FLOAT_VECTOR,
+                    dim=vectorSize,
+                    description="Query vector embedding"
+                ))
 
             schema = CollectionSchema(
                 fields=fields,
@@ -208,12 +232,11 @@ class MilvusConnection(DocStoreConnection):
                 using=self.alias
             )
 
-            # Create index for vector field
-            milvus_config = settings.MILVUS or {}
-            index_config = milvus_config.get("index", {})
+            # Create index for vector field using config
+            index_config = self.mapping_config.get("settings", {}).get("index", {})
             index_params = {
                 "metric_type": index_config.get("metric_type", "L2"),
-                "index_type": index_config.get("type", "IVF_FLAT"),
+                "index_type": index_config.get("index_type", "IVF_FLAT"),
                 "params": index_config.get("params", {"nlist": 128}),
             }
 
@@ -423,7 +446,10 @@ class MilvusConnection(DocStoreConnection):
 
         return None
 
-    def insert(self, rows: list[dict], indexName: str, knowledgebaseId: str = None) -> list[str]:
+    def insert(self, rows: list[dict], indexName: str, knowledgebaseId: str | None = None) -> list[str]:
+        if knowledgebaseId is None:
+            raise ValueError("knowledgebaseId cannot be None")
+
         collection_name = f"{indexName}_{knowledgebaseId}".replace("-", "_")
 
         if not self.indexExist(indexName, knowledgebaseId):
@@ -471,6 +497,15 @@ class MilvusConnection(DocStoreConnection):
                 # Ensure kb_id is set
                 if 'kb_id' not in prepared_doc and knowledgebaseId:
                     prepared_doc['kb_id'] = knowledgebaseId
+
+                # Ensure all required fields from mapping are present with default values
+                for field_name, field_info in self.mapping.items():
+                    if field_name not in prepared_doc:
+                        default_value = field_info.get("default", "")
+                        # Skip vector fields as they are handled separately
+                        if "_vec" in field_name:
+                            continue
+                        prepared_doc[field_name] = default_value
 
                 # Handle special field transformations similar to infinity_conn
                 for key, value in list(prepared_doc.items()):
@@ -583,6 +618,15 @@ class MilvusConnection(DocStoreConnection):
             # Ensure kb_id is preserved
             if 'kb_id' not in updated_doc:
                 updated_doc['kb_id'] = original_doc.get('kb_id', knowledgebaseId)
+
+            # Ensure all required fields from mapping are present with default values
+            for field_name, field_info in self.mapping.items():
+                if field_name not in updated_doc:
+                    default_value = field_info.get("default", "")
+                    # Skip vector fields as they are handled separately
+                    if "_vec" in field_name:
+                        continue
+                    updated_doc[field_name] = default_value
 
             # Insert updated document
             collection.insert([updated_doc])
