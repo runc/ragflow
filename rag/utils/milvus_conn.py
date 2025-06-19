@@ -16,7 +16,8 @@ from rag.utils import singleton
 @singleton
 class MilvusConnection(DocStoreConnection):
     def __init__(self, tenant: str):
-        super().__init__(tenant)
+        # super().__init__(tenant)  # 父类无__init__，直接去掉
+        self.tenant = tenant
         self.conn = self._create_connection()
         # Sanitize tenant ID for db name and apply length considerations
         db_tenant_suffix = tenant.replace("-", "_")
@@ -346,10 +347,6 @@ class MilvusConnection(DocStoreConnection):
                         # A simple "like" or "==" might work for limited cases if field is indexed.
                         # For now, this part is not deeply implemented.
                         # We could try to add to `final_filter_expr` if it's a simple equality on an indexed scalar field.
-                        logging.warning(f"MatchTextExpr not fully implemented for Milvus in this pass. Text field: {expr.field}, Text: {expr.text}")
-                        # Example: if expr.field is indexed and we want exact match:
-                        # text_filter = f"{expr.field} == '{expr.text}'"
-                        # Then this would need to be combined with vector search (hybrid) or run as a separate query.
                         # This is complex. Raising NotImplemented for now.
                         # raise NotImplementedError("Milvus MatchTextExpr / Hybrid Search not implemented yet.")
                         pass # Skipping text search for now

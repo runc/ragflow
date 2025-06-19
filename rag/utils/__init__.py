@@ -22,16 +22,15 @@ import tiktoken
 from api.utils.file_utils import get_project_base_directory
 
 
-def singleton(cls, *args, **kw):
+def singleton(cls):
     instances = {}
-
-    def _singleton():
-        key = str(cls) + str(os.getpid())
+    def getinstance(*args, **kwargs):
+        # 支持多租户单例，key可自定义
+        key = (cls, args[0] if args else None)
         if key not in instances:
-            instances[key] = cls(*args, **kw)
+            instances[key] = cls(*args, **kwargs)
         return instances[key]
-
-    return _singleton
+    return getinstance
 
 
 def rmSpace(txt):
