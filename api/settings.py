@@ -23,6 +23,7 @@ import rag.utils
 import rag.utils.es_conn
 import rag.utils.infinity_conn
 import rag.utils.opensearch_coon
+import rag.utils.milvus_conn
 from api.constants import RAG_FLOW_SERVICE_NAME
 from api.utils import decrypt_database_config, get_base_config
 from api.utils.file_utils import get_project_base_directory
@@ -164,14 +165,8 @@ def init_settings():
     elif lower_case_doc_engine == "infinity":
         docStoreConn = rag.utils.infinity_conn.InfinityConnection()
     elif lower_case_doc_engine == "milvus":
-        milvus_config = get_base_config("milvus", {"host": "localhost", "port": "19530", "db_name": "ragflow", "user": "", "password": ""})
-        docStoreConn = rag.utils.milvus_conn.MilvusConnection(
-            host=milvus_config["host"],
-            port=milvus_config["port"],
-            db_name=milvus_config["db_name"],
-            user=milvus_config.get("user", ""),
-            password=milvus_config.get("password", "")
-        )    
+        # 支持milvus
+        docStoreConn = rag.utils.milvus_conn.MilvusConnection()
     elif lower_case_doc_engine == "opensearch":
         docStoreConn = rag.utils.opensearch_coon.OSConnection()
     else:
